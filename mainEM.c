@@ -48,7 +48,7 @@ sem_t sem_prot_stop;
 int *id_nodos;
 int *id_nodos_pend;
 
-int num_pend;//nn e un array pero e sobre os nodos pendientes
+int num_pend = 0;//nn e un array pero e sobre os nodos pendientes
 
 //Semaforos de paso
 sem_t sem_paso_fillo;
@@ -83,7 +83,7 @@ int main (int argc, char const *argv[]){
   pthread_t fioReceptor;
   pthread_t fioFillo[1000];
 
-  id_cola = msgget(ftok("/tmp" , 1234 ), 0777 | IPC_CREAT);
+  id_cola = msgget(ftok("/tmp" , 123 ), 0777 | IPC_CREAT);
   id_cola_ack = msgget(ftok("/tmp" , 1234 ), 0777 | IPC_CREAT);
 
   printf("ID da cola de peticions: %i\n", id_cola);
@@ -116,7 +116,7 @@ int main (int argc, char const *argv[]){
     if (!quero && !primeiro_paso) {
 
       printf("Esperando os novos fillos. \n");
-      getchar();
+      getchar(); // solo vale para volver a intentar ejecutar outra vez todos os procesos fillo que xa fixemos antes
 
       for(int i = 0; i < num_fillos; i++){
 	pthread_create(&fioFillo[i], NULL, fillo, "");
@@ -277,7 +277,7 @@ mensaxe receiveMsg(int id_cola) {
   mensaxe msg;
   int res = msgrcv (id_cola, (struct msgbuf *)&msg, sizeof(msg), mi_id, 0);
 
-  printf("Recibo dende: %i e a coloa e %i\n", msg.id_nodo, id_cola);
+  printf("Recibo dende: %i e a cola e %i\n", msg.id_nodo, id_cola);
 
   return msg;
 }
@@ -309,7 +309,7 @@ void *fillo (void *args){
   printf("Creado proceso de %s\n", proceso);
   sem_wait(&sem_paso_fillo);
   printf("Proceso de %s na SC\n", proceso);
-  getchar();
+  getchar(); // paramos dentro da sc ata que lle damos enter
   printf("Proceso de %s salindo da SC\n", proceso);
   sem_post(&sem_paso_pai);
 
@@ -318,3 +318,4 @@ void *fillo (void *args){
   }
   pthread_exit(NULL);
 }
+
