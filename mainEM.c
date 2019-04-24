@@ -130,6 +130,25 @@ int main (int argc, char const *argv[]){
     quero = 1;
     sem_post(&sem_prot_quero);
 
+    for (int i = 0; i < N -1; i++){
+      sendMsg(REQUEST, id_nodos[i]);
+    }
+    for (int i = 0; i < N -1; i++){
+      receiveMsg(id_cola_ack);
+    }  
+
+    
+    if(mi_prio == 4) {
+      for (int i = 0; i < num_pend; i++) {
+          sendMsg(REPLY, id_nodos_pend[i]);
+          num_pend = 0;
+      }
+    }
+
+    sem_wait(&sem_prot_sc);
+    sc = 1;
+    sem_post(&sem_prot_sc);
+
     //--------------------------------- INICIO DA SC -----------------------------
 
     printf("Gano a exclusion mutua\n");
