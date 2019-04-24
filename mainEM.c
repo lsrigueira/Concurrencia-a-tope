@@ -20,6 +20,7 @@ mensaxe receiveMsg();
 void *procesoReceptor();
 void crearVector();
 void *fillo(void *args);
+void menu();
 
 int N = 3; //Numero de nodos, poñoo en int para poder modificalo por parametros
 
@@ -29,6 +30,7 @@ int N = 3; //Numero de nodos, poñoo en int para poder modificalo por parametros
 //Identificadores
 int mi_id = 1;
 int mi_prio = 0;
+
 
 //Colas de mensaxes
 int id_cola = 0;
@@ -54,6 +56,8 @@ int num_pend = 0;//nn e un array pero e sobre os nodos pendientes
 sem_t sem_paso_fillo;
 sem_t sem_paso_pai;
 sem_t sem_paso_lectores;
+
+sem_t sem_paso_simu;
 
 //Contadores
 int num_fillos = 0;
@@ -105,26 +109,27 @@ int main (int argc, char const *argv[]){
   //Facemos un thread para o proceso receptor
   pthread_create(&fioReceptor,NULL,procesoReceptor,"");
 
-  //Facemos un thread con cada un dos fillos
-  for(int i = 0; i < num_fillos; i++){
-    pthread_create(&fioFillo[i], NULL, fillo, "");
-  }
+ 
+  // menu(); 
 
   while (1){
-
+    
     //Se nn e a primeira vez, pulsamos unha tecla para crear o fillo
-    if (!quero && !primeiro_paso) {
+    //if (!quero && !primeiro_paso) {
 
-      printf("Esperando os novos fillos. \n");
+      /* printf("Esperando os novos fillos. \n");
       getchar(); // solo vale para volver a intentar ejecutar outra vez todos os procesos fillo que xa fixemos antes
 
       for(int i = 0; i < num_fillos; i++){
 	pthread_create(&fioFillo[i], NULL, fillo, "");
-      }
+      }*/
 
-    }else {
-      primeiro_paso = 0;
-    }
+      //--------------------------------------_MENUUU---------------------------------------------
+      menu();
+
+      // }else {
+      //primeiro_paso = 0;
+      //}
 
     sem_wait(&sem_prot_quero);
     quero = 1;
@@ -151,7 +156,7 @@ int main (int argc, char const *argv[]){
 
     //--------------------------------- INICIO DA SC -----------------------------
 
-    printf("Gano a exclusion mutua\n");
+    printf("O nodo %i gana a 'exclusion mutua' entre nodos\n", mi_id);
     num_fillos_pend = num_fillos - num_fillos_atend;
 
     for (int i = 0; i < num_fillos_pend; i++){
@@ -297,8 +302,10 @@ void crearVector() {
 void *fillo (void *args){
 
   char proceso[50];
-
-  switch(mi_prio){
+  int *prio;
+  prio = (int *)args;
+  //printf("PRIOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO:%i\n",*prio);
+  switch(*prio){
   case 1: strcpy(proceso, "anulacions"); break;
   case 2: strcpy(proceso, "pagos"); break;
   case 3: strcpy(proceso, "pre-reservas"); break;
@@ -307,9 +314,11 @@ void *fillo (void *args){
   }
 
   printf("Creado proceso de %s\n", proceso);
+  
   sem_wait(&sem_paso_fillo);
   printf("Proceso de %s na SC\n", proceso);
-  getchar(); // paramos dentro da sc ata que lle damos enter
+  //getchar(); // paramos dentro da sc ata que lle damos enter
+  sem_wait(&sem_paso_simu);
   printf("Proceso de %s salindo da SC\n", proceso);
   sem_post(&sem_paso_pai);
 
@@ -319,3 +328,34 @@ void *fillo (void *args){
   pthread_exit(NULL);
 }
 
+//----------------------------------------MENU--------------------------------------
+
+void menu(){
+  //sem_t sem_paso_simu;
+  char mander[30];
+  int prio_novos= 5;
+  int numero_fillos_novos = 0;
+  while(1){
+    
+  printf("ENTER para continuar ou numero e prio de novos procesos\n");
+  fgets(mander,30,stdin);
+  fflush(stdin);
+  if (mander[0] == '\n'){
+    sem_post(&sem_paso_simu);
+    break;
+  }else{
+    prio_novos =  atoi( &mander[2]);
+    numero_fillos_novos = atoi(&mander[0]);
+    num_fillos =+ numero_fillos_novos;
+    pthread_t fioFillo[1000];
+    printf("Creamos %i procesos con prio %i \n", numero_fillos_novos, prio_novos);
+    
+    //Creacion de fillos
+    for(int i = 0; i < numero_fillos_novos; i++){
+      pthread_create(&fioFillo[i],NULL, fillo, (void*) &prio_novos);
+    }
+    //sleep(2);
+  }
+  }
+  return;
+}
