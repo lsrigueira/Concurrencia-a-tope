@@ -164,7 +164,7 @@ int main (int argc, char const *argv[]){
       num_fillos_atend ++;
 
       //para escritores
-      if (mi_prio != 4){
+      if (mi_prio != 4 && mi:prio!=5){
 	sem_wait(&sem_paso_pai);
       }
       
@@ -180,14 +180,15 @@ int main (int argc, char const *argv[]){
     }
 
     //para lectores
-    if(mi_prio == 4){
+    if(mi_prio == 4 || mi_prio == 5){
       for (int i = 0; i < num_fillos; i++){
 	printf("Esperando o lector %i\n" , i);
 	sem_wait(&sem_paso_lectores);
 	stop = 0;
       }
     }
-
+    
+    // se chega alguen con mais prio volvo a empezar o bucle de execucion
     if (stop == 1){
       primeiro_paso = 1;
       stop = 0;
@@ -242,7 +243,7 @@ void *procesoReceptor(){
 	printf("Recibida peticion con mais prioridade dende %i\n", id_nodo_orixe);
 	nodo_prio = id_nodo_orixe;
 
-	if (mi_prio == 4){
+	if (mi_prio == 4 || mi_prio == 5){
 	  printf("Lector añadido a pendentes\n");
 	  id_nodos_pend[num_pend++] = id_nodo_orixe;
 	}
@@ -309,7 +310,8 @@ void *fillo (void *args){
   case 1: strcpy(proceso, "anulacions"); break;
   case 2: strcpy(proceso, "pagos"); break;
   case 3: strcpy(proceso, "pre-reservas"); break;
-  case 4: strcpy(proceso, "gradas/eventos"); break;
+  case 4: strcpy(proceso, "gradas"); break;
+  case 5: strcpy(proceso, "eventos");break;
   default : strcpy(proceso, "proceso desconocido"); break;
   }
 
