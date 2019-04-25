@@ -67,16 +67,16 @@ int primeiro_paso = 1;
 
 int nodo_prio = 0;//este fainos falla para deterinar a donde cedemos a em
 
+int reset = 1;
+
 //------------------------------- INICIO DO MAIN ------------------------------------
 //meto por parametros id nºnodos prio nºfillos
 int main (int argc, char const *argv[]){
-  if (argc == 5){
+  if (argc == 3){
     mi_id = atoi(argv[1]);
     N = atoi(argv[2]);
-    mi_prio = atoi(argv[3]);
-    num_fillos = atoi(argv[4]);
   }else{
-    printf("Indroduzca: ID Nº_NODOS PRIORIDADE Nº_FILLOS.\n");
+    printf("Indroduzca: ID Nº_NODOS.\n");
     exit(0);
   }
   int id_nodos_aux[N-1];
@@ -110,26 +110,26 @@ int main (int argc, char const *argv[]){
   pthread_create(&fioReceptor,NULL,procesoReceptor,"");
 
  
-  // menu(); 
+   menu(); 
 
   while (1){
     
     //Se nn e a primeira vez, pulsamos unha tecla para crear o fillo
     //if (!quero && !primeiro_paso) {
-
+    if (reset == 0){
       /* printf("Esperando os novos fillos. \n");
       getchar(); // solo vale para volver a intentar ejecutar outra vez todos os procesos fillo que xa fixemos antes
 
       for(int i = 0; i < num_fillos; i++){
 	pthread_create(&fioFillo[i], NULL, fillo, "");
-      }*/
+	}*/
 
       //--------------------------------------_MENUUU---------------------------------------------
       menu();
-
-      // }else {
-      //primeiro_paso = 0;
-      //}
+      
+    }else {
+      reset = 0;
+    }
 
     sem_wait(&sem_prot_quero);
     quero = 1;
@@ -143,7 +143,7 @@ int main (int argc, char const *argv[]){
     }  
 
     
-    if(mi_prio == 4) {
+    if(mi_prio == 4 || mi_prio ==5) {
       for (int i = 0; i < num_pend; i++) {
           sendMsg(REPLY, id_nodos_pend[i]);
           num_pend = 0;
@@ -164,7 +164,7 @@ int main (int argc, char const *argv[]){
       num_fillos_atend ++;
 
       //para escritores
-      if (mi_prio != 4 && mi:prio!=5){
+      if (mi_prio != 4 && mi_prio!=5){
 	sem_wait(&sem_paso_pai);
       }
       
@@ -184,13 +184,26 @@ int main (int argc, char const *argv[]){
       for (int i = 0; i < num_fillos; i++){
 	printf("Esperando o lector %i\n" , i);
 	sem_wait(&sem_paso_lectores);
-	stop = 0;
+	//stop = 0;
+	//AÑADO O TEMA DE PARARSE HAY ALGO MAIS PRIO
+
+      sem_wait(&sem_prot_stop);
+      if(stop == 1){
+	sem_post(&sem_prot_stop);
+	printf("Hai unha petición mais prioritara e deixo de dar paso aos procesos de prio menor.\n");
+	sendMsg(REPLY, nodo_prio);
+	break;
+      }
+
+      sem_post(&sem_prot_stop);
+	
       }
     }
     
     // se chega alguen con mais prio volvo a empezar o bucle de execucion
     if (stop == 1){
-      primeiro_paso = 1;
+      //primeiro_paso = 1;
+      reset = 1;
       stop = 0;
       continue;
     }
@@ -320,11 +333,12 @@ void *fillo (void *args){
   sem_wait(&sem_paso_fillo);
   printf("Proceso de %s na SC\n", proceso);
   //getchar(); // paramos dentro da sc ata que lle damos enter
-  sem_wait(&sem_paso_simu);
+  //sem_wait(&sem_paso_simu);
+  menu();
   printf("Proceso de %s salindo da SC\n", proceso);
   sem_post(&sem_paso_pai);
 
-  if (mi_prio == 4){
+  if (mi_prio == 4 || mi_prio == 5){
     sem_post(&sem_paso_lectores);
   }
   pthread_exit(NULL);
@@ -337,13 +351,12 @@ void menu(){
   char mander[30];
   int prio_novos= 5;
   int numero_fillos_novos = 0;
-  while(1){
-    
+  while(1){ 
   printf("ENTER para continuar ou numero e prio de novos procesos\n");
   fgets(mander,30,stdin);
   fflush(stdin);
   if (mander[0] == '\n'){
-    sem_post(&sem_paso_simu);
+    //sem_post(&sem_paso_simu);
     break;
   }else{
     prio_novos =  atoi( &mander[2]);
