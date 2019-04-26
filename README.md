@@ -9,9 +9,6 @@ Cambios a realizar:
 
 ###Comandos para hacer pull a GitHub desde terminal###
 
-  - " git pull "
-  - " git add [files OR .] #Mensaje de actualización "
-  - " git commit -m "Mensaje" "
-
-
-
+  -  git pull
+  -  git add [files OR .] #Mensaje de actualización
+  -  git commit -m "Mensaje"
