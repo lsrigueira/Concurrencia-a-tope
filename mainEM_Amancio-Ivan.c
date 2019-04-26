@@ -342,7 +342,7 @@ int sendMsg(int tipo, int id_destino,int id_ticket){
     printf("MI PRIO: %i\n",mi_prio);
     msg.prio = mi_prio;
     msg.clk= mi_clk;
-    printf("Enviado dende %i: prio: %i, mtype %i, clk: %i\n", msg.id_nodo, msg.prio , msg.mtype, msg.clk );
+    printf("Enviado dende %i: prio: %i, mtype %li, clk: %i\n", msg.id_nodo, msg.prio , msg.mtype, msg.clk );
     return msgsnd(id_cola, (struct msgbuf *)&msg, sizeof(msg.prio)+
 																								  sizeof(msg.id_nodo)+
 																								  sizeof(msg.mtype)+
