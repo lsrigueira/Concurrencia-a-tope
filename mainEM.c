@@ -203,7 +203,7 @@ int main (int argc, char const *argv[]){
     //--------------------------------- INICIO DA SC -----------------------------
 
     printf("[MAIN] O nodo %i gana a 'exclusion mutua' entre nodos\n", mi_id);
-		printf("[MAIN] Buscado prioritario entre %i, %i, %i\n", n_anulacions, n_pagos, n_reservas);
+		printf("[MAIN] Buscado prioritario entre %i, %i, %i, %i\n", n_anulacions, n_pagos, n_reservas, n_lectores);
 				 if(n_anulacions > 0) {
 						printf("[MAIN] Avisado anulacions\n");
 					 sem_post(&sem_anulacions);
@@ -213,6 +213,9 @@ int main (int argc, char const *argv[]){
 				 } else if(n_reservas > 0) {
 						 printf("[MAIN] Avisado reservas\n");
 					 sem_post(&sem_reservas);
+				 } else if(n_lectores > 0) {
+						 printf("[MAIN] Avisado lector\n");
+					 sem_post(&sem_lectores);
 				 }
 		sem_wait(&sem_salida);
 
@@ -404,7 +407,7 @@ void *fillo (void *args){
   	sem_wait(sem_proceso);
   	printf("[PROCESO] %s na SC PULSA ENTER PARA CONTINUAR\n", proceso);
 		// paramos dentro da sc ata que lle damos enter
-  	//sem_wait(&sem_paso_simu);
+  	sem_wait(&sem_paso_simu);
 		sem_wait(sem_contador);
 		*contador = *contador - 1;
 		sem_post(sem_contador);
