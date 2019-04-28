@@ -404,7 +404,7 @@ void *fillo (void *args){
   	sem_wait(sem_proceso);
   	printf("[PROCESO] %s na SC PULSA ENTER PARA CONTINUAR\n", proceso);
 		// paramos dentro da sc ata que lle damos enter
-  	sem_wait(&sem_paso_simu);
+  	//sem_wait(&sem_paso_simu);
 		sem_wait(sem_contador);
 		*contador = *contador - 1;
 		sem_post(sem_contador);
