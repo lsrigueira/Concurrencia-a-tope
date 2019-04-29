@@ -47,6 +47,7 @@ sem_t sem_prot_sc;
 sem_t sem_prot_stop;
 sem_t sem_prot_contcolamas;
 sem_t sem_prot_contcolamenos;
+sem_t sem_prot_lectura;
 
 //Array de nodos
 int *id_nodos;
@@ -138,6 +139,7 @@ int main (int argc, char const *argv[]){
   sem_init(&sem_prot_stop,0,1);
   sem_init(&sem_prot_contcolamas,0,1);
   sem_init(&sem_prot_contcolamenos,0,1);
+  sem_init(&sem_prot_lectura,0,1);
 	sem_init(&sem_n_anulacions,0,1);
 	sem_init(&sem_n_pagos,0,1);
 	sem_init(&sem_n_reservas,0,1);
@@ -151,6 +153,9 @@ int main (int argc, char const *argv[]){
 	pthread_create(&fioMenu,NULL,menu,"");
 
   while (1){
+    sem_wait(&sem_entrada);
+
+    printf("[MAIN] Buscado prio entre %i, %i, %i, %i\n", n_anulacions, n_pagos, n_reservas, n_lectores);
     if(n_anulacions > 0) {
       mi_prio = 1;
       //sem_post(&sem_anulacions);
@@ -178,7 +183,6 @@ int main (int argc, char const *argv[]){
       // }else {
       //primeiro_paso = 0;
       //}
-		sem_wait(&sem_entrada);
 
     sem_wait(&sem_prot_quero);
     quero = 1;
@@ -276,8 +280,8 @@ int main (int argc, char const *argv[]){
 
 // -------------------------------- PROCESO RECEPTOR --------------------------------
 void *procesoReceptor(){
-  printf("[RECIBIDO] Receptor habilitado\n");
-  while (1) {
+	printf("[RECIBIDO] Receptor habilitado\n");
+  while (1){
     int id_nodo_orixe, prio_orixe, clk_orixe;
 
 		struct mensaxe msg;
@@ -287,27 +291,33 @@ void *procesoReceptor(){
     prio_orixe = msg.prio;
 		clk_orixe = msg.clk;
 
-    if(clk_orixe > clk)
-      clk = clk_orixe;
-    if (quero == 0 || /*(prio_orixe < mi_prio && sc != 1) ||*/ clk_orixe < mi_clk ||
-    /*(prio_orixe == mi_prio &&*/ (id_nodo_orixe < mi_id && sc != 1) ) {
+			if(clk_orixe > clk) clk = clk_orixe;
+			if (quero == 0 || /*(prio_orixe < mi_prio && sc != 1) ||*/ clk_orixe < mi_clk ||
+					 /*(prio_orixe == mi_prio &&*/ (id_nodo_orixe < mi_id && sc != 1) ){
       sendMsg(REPLY, id_nodo_orixe);
-    } else{
+    	} else{
       printf("[RECIBIDO]Añadido a pendentes\n");
-      if(prio_orixe < mi_prio && sc == 1) {
-				sem_wait(&sem_prot_stop);
-				stop = 1;
-				sem_post(&sem_prot_stop);
-				printf("[RECIBIDO]Recibida peticion con mais prioridade dende %i\n", id_nodo_orixe);
+      if(prio_orixe < 4){
+				sem_wait(&sem_prot_lectura);
+				lectura = 0;
+			  sem_post(&sem_prot_lectura);
+				printf("[RECIBIDO] Recibido escritura dende %i, por ende, desactivamos lectura\n", id_nodo_orixe);
 				nodo_prio = id_nodo_orixe;
-				if (mi_prio == 4) {
-	 				printf("[RECIBIDO]Lector añadido a pendentes\n");
-	  			id_nodos_pend[num_pend++] = id_nodo_orixe;
-				}
-      } else{
-				id_nodos_pend[num_pend++] = id_nodo_orixe;
+
+				if (prio_orixe == 4){
+          if(lectura == 1) {
+	 				   sendMsg(REPLY, id_nodo_orixe);
+          } else {
+            printf("[RECIBIDO]Lector añadido a pendentes\n");
+            id_nodos_pend[num_pend++] = id_nodo_orixe;
+          }
+				}else{
+          printf("[RECIBIDO]Escritor añadido a pendentes\n");
+  				id_nodos_pend[num_pend++] = id_nodo_orixe;
+        }
       }
-    }
+   }
+
   }//--------cerra while ------------
   pthread_exit(NULL);
 }
@@ -351,6 +361,7 @@ void *fillo (void *args) {
   char proceso[50];
   int prio = 0;
   prio = *(int *)args;
+  sem_post(&sem_paso_fillo);
 	sem_t* sem_contador;
 	sem_t* sem_proceso;
 	int *contador;
@@ -395,7 +406,9 @@ void *fillo (void *args) {
   }
 	printf("Creado proceso de %s\n", proceso);
   if(mia_prio!=4) {
+    sem_wait(&sem_prot_lectura);
     *puntlectura=0;
+    sem_post(&sem_prot_lectura);
   }
 
 	sem_wait(sem_contador);
@@ -419,7 +432,9 @@ void *fillo (void *args) {
   }
 
   if(mia_prio==4) {
+    sem_wait(&sem_prot_lectura);
     *puntlectura=1;
+    sem_post(&sem_prot_lectura);
     *entrar=1;
   }
 
@@ -468,9 +483,9 @@ void *menu() {
       pthread_t fioFillo[1000];
       printf("[menu] Creamos %i procesos con prio %i \n", numero_fillos_novos, prio_novos);
       //Creacion de fillos
-      int p=0;
       for(int i = 0; i < numero_fillos_novos; i++){
-        p=pthread_create(&fioFillo[i],NULL, fillo, (void*) &prio_novos);
+        pthread_create(&fioFillo[i],NULL, fillo, (void*) &prio_novos);
+        sem_wait(&sem_paso_fillo);
       }
     }
   }
