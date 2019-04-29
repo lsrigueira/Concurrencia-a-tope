@@ -99,6 +99,7 @@ int mi_clk = 0;
 //Control tempos
 FILE * Fout;
 char nombre_ficheiro[30];
+sem_t sem_escritura_fichero;
 
 //------------------------------- INICIO DO MAIN ------------------------------------
 //meto por parametros id nºnodos prio nºfillos
@@ -160,6 +161,8 @@ int main (int argc, char const *argv[]){
 	sem_init(&sem_n_pagos,0,1);
 	sem_init(&sem_n_reservas,0,1);
 	sem_init(&sem_n_lectores,0,1);
+
+  sem_init(&sem_escritura_fichero, 0, 1);
 
   //creamos o vector cos IDc dos veciños
   crearVector();
@@ -385,9 +388,12 @@ void *fillo (void *args) {
   int *puntlectura=&lectura;
   int *plector_cola=&lector_cola;
 
-  struct timeval tv;
-  time_t curtime;
-  char buffer[30];
+  struct timeval tv_in;
+  struct timeval tv_out;
+  time_t curtime_in;
+  time_t curtime_out;
+  char buffer_in[30];
+  char buffer_out[30];
 
   switch(prio) {
   case 1: strcpy(proceso, "anulacions");
@@ -424,6 +430,42 @@ void *fillo (void *args) {
 		break;
   default : strcpy(proceso, "proceso desconocido"); break;
   }
+
+  struct entrada {
+    char proceso[30];
+    int pid;
+    char buffer[60];
+    struct timeval tv;
+  };
+  struct salida {
+    char proceso[30];
+    int pid;
+    char buffer[60];
+    struct timeval tv;
+  };
+
+  struct entrada in;
+  struct salida out;
+
+  //----------------------------------------------------------//
+  //sem_wait(&sem_escritura_fichero);
+  //sprintf(nombre_ficheiro,"%i%s.txt",N,proceso);
+  //Fout = fopen(nombre_ficheiro, "a");
+  gettimeofday(&tv_in, NULL);
+  curtime_in=tv_in.tv_sec;
+  strftime(buffer_in,30,"%T.",localtime(&curtime_in));
+  strcpy(in.proceso,proceso);
+  in.pid = getpid();
+  strcpy(in.buffer,buffer_in);
+  in.tv = tv_in;
+
+  //fprintf(entrada, "Proceso de %s %i entra - %s%ld\n",proceso,getpid(),buffer_in,tv_in.tv_usec);
+  //fclose(Fout);
+
+  //sem_post(&sem_escritura_fichero);
+
+  //----------------------------------------------------------//
+
 	printf("Creado proceso de %s\n", proceso);
   if(mia_prio!=4) {
     sem_wait(&sem_prot_lectura);
@@ -458,36 +500,35 @@ void *fillo (void *args) {
     *entrar=1;
   }
 
-  //----------------------------------------------------------//
-  sprintf(nombre_ficheiro,"%i%s.txt",N,proceso);
-  Fout = fopen(nombre_ficheiro, "a");
-
-
-
-
-
-  gettimeofday(&tv, NULL);
-  curtime=tv.tv_sec;
-  strftime(buffer,30,"%T.",localtime(&curtime));
-  printf("%li\n",sizeof(buffer));
-  fprintf(Fout, "Proceso de %s %i entra - %s%ld\n",proceso,getpid(),buffer,tv.tv_usec);
-
-  //----------------------------------------------------------//
-
   printf("[PROCESO] %s na SC PULSA ENTER PARA CONTINUAR\n", proceso);
 	// paramos dentro da sc ata que lle damos enter
   sem_wait(&sem_paso_simu);
   printf("Proceso de %s salindo da SC\n", proceso);
 
   //----------------------------------------------------------//
+  //sem_wait(&sem_escritura_fichero);
+  //sprintf(nombre_ficheiro,"%i%s.txt",N,proceso);
+  //Fout = fopen(nombre_ficheiro, "a");
+  gettimeofday(&tv_out, NULL);
+  curtime_out=tv_out.tv_sec;
+  strftime(buffer_out,30,"%T.",localtime(&curtime_out));
+  strcpy(out.proceso,proceso);
+  out.pid = getpid();
+  strcpy(out.buffer,buffer_out);
+  out.tv = tv_out;
 
-  gettimeofday(&tv, NULL);
-  curtime=tv.tv_sec;
-  strftime(buffer,30,"%T.",localtime(&curtime));
-  fprintf(Fout, "Proceso de %s %i sale - %s%ld\n",proceso,getpid(),buffer,tv.tv_usec);
-  //fputs("Hola", Fout[prio]);
+
+
+  //fprintf(salida, "Proceso de %s %i sale - %s%ld\n",proceso,clk,buffer_out,tv_out.tv_usec);
+  //fclose(Fout);
+  //sem_post(&sem_escritura_fichero);
+  sem_wait(&sem_escritura_fichero);
+  sprintf(nombre_ficheiro,"%i%s.txt",N,proceso);
+  Fout = fopen(nombre_ficheiro, "a");
+  fprintf(Fout, "Proceso de %s %i crease - %s%ld\n", in.proceso, in.pid, in.buffer, in.tv.tv_usec);
+  fprintf(Fout, "Proceso de %s %i sale - %s%ld\n", out.proceso, out.pid, out.buffer, out.tv.tv_usec);
   fclose(Fout);
-
+  sem_post(&sem_escritura_fichero);
   //----------------------------------------------------------//
 
   sem_wait(sem_contador);
