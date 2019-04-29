@@ -420,7 +420,7 @@ void *fillo (void *args){
   sem_wait(sem_proceso);
   	printf("Proceso de %s na SC\n", proceso);
 		// paramos dentro da sc ata que lle damos enter
-  	menu();
+  	//menu();
 		sem_wait(sem_contador);
 		*contador = *contador - 1;
 		sem_post(sem_contador);
