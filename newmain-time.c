@@ -97,8 +97,7 @@ int clk = 0;
 int mi_clk = 0;
 
 //Control tempos
-char *ficheiro[30];
-FILE * Fout[5];
+FILE * Fout;
 char nombre_ficheiro[30];
 
 //------------------------------- INICIO DO MAIN ------------------------------------
@@ -112,7 +111,7 @@ int main (int argc, char const *argv[]){
     exit(0);
   }
 
-  sprintf(nombre_ficheiro,"%ianulaciones.txt",N);
+  /*sprintf(nombre_ficheiro,"%ianulaciones.txt",N);
   Fout[1] = fopen (nombre_ficheiro, "a");
   sprintf(nombre_ficheiro,"%ipagos.txt",N);
   Fout[2] = fopen (nombre_ficheiro, "a");
@@ -121,7 +120,7 @@ int main (int argc, char const *argv[]){
   sprintf(nombre_ficheiro,"%igradas.txt",N);
   Fout[4] = fopen (nombre_ficheiro, "a");
   sprintf(nombre_ficheiro,"%ieventos.txt",N);
-  Fout[5] = fopen (nombre_ficheiro, "a");
+  Fout[5] = fopen (nombre_ficheiro, "a");*/
 
   int id_nodos_aux[N-1];
   id_nodos = id_nodos_aux;
@@ -386,6 +385,10 @@ void *fillo (void *args) {
   int *puntlectura=&lectura;
   int *plector_cola=&lector_cola;
 
+  struct timeval tv;
+  time_t curtime;
+  char buffer[30];
+
   switch(prio) {
   case 1: strcpy(proceso, "anulacions");
     mia_prio=1;
@@ -455,16 +458,19 @@ void *fillo (void *args) {
     *entrar=1;
   }
 
-  struct timeval tv;
-  time_t curtime;
-  char buffer[30];
-
   //----------------------------------------------------------//
+  sprintf(nombre_ficheiro,"%i%s.txt",N,proceso);
+  Fout = fopen(nombre_ficheiro, "a");
+
+
+
+
 
   gettimeofday(&tv, NULL);
   curtime=tv.tv_sec;
   strftime(buffer,30,"%T.",localtime(&curtime));
-  fprintf(Fout[prio], "Proceso de %s %i entra - %s%ld\n",proceso,getpid(),buffer,tv.tv_usec);
+  printf("%li\n",sizeof(buffer));
+  fprintf(Fout, "Proceso de %s %i entra - %s%ld\n",proceso,getpid(),buffer,tv.tv_usec);
 
   //----------------------------------------------------------//
 
@@ -478,8 +484,9 @@ void *fillo (void *args) {
   gettimeofday(&tv, NULL);
   curtime=tv.tv_sec;
   strftime(buffer,30,"%T.",localtime(&curtime));
-  fprintf(Fout[prio], "Proceso de %s %i sale - %s%ld\n",proceso,getpid(),buffer,tv.tv_usec);
-  fclose(Fout[prio]);
+  fprintf(Fout, "Proceso de %s %i sale - %s%ld\n",proceso,getpid(),buffer,tv.tv_usec);
+  //fputs("Hola", Fout[prio]);
+  fclose(Fout);
 
   //----------------------------------------------------------//
 
