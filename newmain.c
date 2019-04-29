@@ -163,7 +163,7 @@ int main (int argc, char const *argv[]){
       mi_prio = 2;
       //sem_post(&sem_pagos);
     } else if(n_reservas > 0) {
-        mi_prio = 3;
+      mi_prio = 3;
       //sem_post(&sem_reservas);
     } else if (n_lectores > 0){
       mi_prio = 4;
@@ -286,37 +286,35 @@ void *procesoReceptor(){
 
 		struct mensaxe msg;
  		receiveMsg(id_cola, &msg);
-		printf("[RECIBIDO] Orixe: %i,Prio: %i,Ticket: %i,id_nodo: %li \n",msg.id_nodo, msg.prio, msg.clk, msg.mtype);
     id_nodo_orixe = msg.id_nodo;
     prio_orixe = msg.prio;
 		clk_orixe = msg.clk;
+    printf("[RECIBIDO] Orixe: %i,Prio: %i,Ticket: %i,id_nodo: %li \n",id_nodo_orixe, prio_orixe, clk, msg.mtype);
 
 			if(clk_orixe > clk) clk = clk_orixe;
 			if (quero == 0 || /*(prio_orixe < mi_prio && sc != 1) ||*/ clk_orixe < mi_clk ||
 					 /*(prio_orixe == mi_prio &&*/ (id_nodo_orixe < mi_id && sc != 1) ){
       sendMsg(REPLY, id_nodo_orixe);
     	} else{
-      printf("[RECIBIDO]Añadido a pendentes\n");
-      if(prio_orixe < 4){
-				sem_wait(&sem_prot_lectura);
-				lectura = 0;
-			  sem_post(&sem_prot_lectura);
-				printf("[RECIBIDO] Recibido escritura dende %i, por ende, desactivamos lectura\n", id_nodo_orixe);
-				nodo_prio = id_nodo_orixe;
-
-				if (prio_orixe == 4){
+        if(prio_orixe < 4){
+  				sem_wait(&sem_prot_lectura);
+  				lectura = 0;
+  			  sem_post(&sem_prot_lectura);
+  				printf("[RECIBIDO] Recibido escritura dende %i, por ende, desactivamos lectura\n", id_nodo_orixe);
+  				nodo_prio = id_nodo_orixe;
+          printf("[RECIBIDO]Escritor añadido a pendentes\n");
+          id_nodos_pend[num_pend++] = id_nodo_orixe;
+        }
+        if (prio_orixe == 4){
           if(lectura == 1) {
-	 				   sendMsg(REPLY, id_nodo_orixe);
+             printf("[RECIBIDO]Asentido lector remoto\n");
+    				   sendMsg(REPLY, id_nodo_orixe);
           } else {
             printf("[RECIBIDO]Lector añadido a pendentes\n");
             id_nodos_pend[num_pend++] = id_nodo_orixe;
           }
-				}else{
-          printf("[RECIBIDO]Escritor añadido a pendentes\n");
-  				id_nodos_pend[num_pend++] = id_nodo_orixe;
         }
       }
-   }
 
   }//--------cerra while ------------
   pthread_exit(NULL);
@@ -375,18 +373,27 @@ void *fillo (void *args) {
 		sem_contador = &sem_n_anulacions;
 		sem_proceso = &sem_anulacions;
 		contador = &n_anulacions;
+    sem_wait(&sem_prot_lectura);
+    lectura = 0;
+    sem_post(&sem_prot_lectura);
 		break;
   case 2: strcpy(proceso, "pagos");
     mia_prio=2;
 		sem_contador = &sem_n_pagos;
 		sem_proceso = &sem_pagos;
 		contador = &n_pagos;
+    sem_wait(&sem_prot_lectura);
+    lectura = 0;
+    sem_post(&sem_prot_lectura);
 		break;
   case 3: strcpy(proceso, "pre-reservas");
     mia_prio=3;
 		sem_contador = &sem_n_reservas;
 		sem_proceso = &sem_reservas;
 		contador = &n_reservas;
+    sem_wait(&sem_prot_lectura);
+    lectura = 0;
+    sem_post(&sem_prot_lectura);
 		break;
   case 4: strcpy(proceso, "gradas");
     prio=4;
