@@ -25,17 +25,11 @@ public class Graph_2 extends JPanel {
 		int PAD = data.size();
 		super.paintComponent(g);
 		Graphics2D g2 = (Graphics2D)g;
-		Graphics2D g3 = (Graphics2D)g;
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-				RenderingHints.VALUE_ANTIALIAS_ON);
-		g3.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
 				RenderingHints.VALUE_ANTIALIAS_ON);
 		int w = getWidth();
 		int h = getHeight();
-	//y
 		g2.draw(new Line2D.Double(PAD+100, PAD, PAD+100, h-PAD-100));
-
-	//x
 		g2.draw(new Line2D.Double(PAD+100, h-PAD-100, w-PAD, h-PAD-100));
 
 		Font font = g2.getFont();
@@ -43,7 +37,7 @@ public class Graph_2 extends JPanel {
 		LineMetrics lm = font.getLineMetrics("0", frc);
 		float sh = lm.getAscent() + lm.getDescent();
 
-		String s = "TIEMPO EN SEGUNDOS";
+		String s = "TIEMPO EN MILISEGUNDOS";
 		float sy = PAD + ((h - 2*PAD) - s.length()*sh)/2 + lm.getAscent();
 		for(int i = 0; i < s.length(); i++) {
 			String letter = String.valueOf(s.charAt(i));
@@ -57,7 +51,6 @@ public class Graph_2 extends JPanel {
 		float sw = (float)font.getStringBounds(s, frc).getWidth();
 		float sx = (w - sw)/2;
 		g2.drawString(s, sx, sy-35);
-
 
 		double xInc = (double)(w - 2*PAD-150)/(data.size()-1);
 		double scale = (double)(h - 2*PAD-150)/getMax(data);
@@ -86,15 +79,13 @@ public class Graph_2 extends JPanel {
 			double x = PAD+100 + i*xInc;
 			double y = h - PAD-100 - scale*data.get(i);
 			g2.fill(new Ellipse2D.Double(x-8, y-8, 16, 16));
-
 			String t = Integer.toString(i+1);
 			for(int p = 0; p < t.length(); p++) {
 				String letter = String.valueOf(t.charAt(p));
 				float tx = (float) (PAD+100 + i*xInc);
 				g2.drawString(letter, tx-3, 900);
 				g2.draw(new Line2D.Double(tx,850, tx, 880));
-}
-
+			}
 			String f = Integer.toString(data.get(i));
 			int posx = 39;
 			float ty = (float) (h - PAD-100 - scale*data.get(i));
@@ -129,12 +120,6 @@ public class Graph_2 extends JPanel {
 	}
 
 	public static void main(String[] args) {
-//				data.add(1);
-//				data.add(3);
-//				data.add(2);
-//				data.add(6);
-//				data.add(7);
-
 		ArrayList <LocalTime> tiempos = new ArrayList<LocalTime>();
 		ArrayList <String> ficheros = new ArrayList<String>();
 		String directory = System.getProperty("user.dir")+"/";
@@ -148,18 +133,12 @@ public class Graph_2 extends JPanel {
 		System.out.println("\nIntroduzca el número de nodos a considerar:\n");
 		nodos = obtenerOpcion();
 		eleccion = nodos;
-		System.out.println("\nNodos introducidos " + nodos);
 		System.out.println("\nIntroduzca el tipo de proceso a comprobar:\n");
 		procesos = sc.nextLine();
 
 		for (j=0;j<eleccion;j++) {
-			//System.out.println("\nIntroduzca el directorio del fichero log " + (j+1) + ":\n");
-			//try {
-				nombre_fichero = "".concat(String.valueOf(j+1)).concat(procesos).concat(".txt");
-				System.out.println(nombre_fichero);
-			//} catch (IOException e) {
-			//	e.printStackTrace();
-			//}
+			nombre_fichero = "".concat(String.valueOf(j+1)).concat(procesos).concat(".txt");
+			System.out.println(nombre_fichero);
 			ficheros.add(nombre_fichero);
 		}
 		try {
@@ -174,31 +153,22 @@ public class Graph_2 extends JPanel {
 				String st="";
 				while ((st = br.readLine()) != null) {
 					String[] parts = st.split("-");
-					for (int i=0;i<parts.length;i++) {
-						//System.out.println(parts[i]);
-					}
-					//System.out.println(parts.length);
 					LocalTime hora = LocalTime.parse(parts[1].trim());
 					tiempos.add(hora);
 				}
-				System.out.println("Tamaño: " + tiempos.size());
 				for (g=0;g<(tiempos.size());g+=2) {
 					long diferencia = (long) (tiempos.get(g+1).toNanoOfDay() - tiempos.get(g).toNanoOfDay())/1000000;
 					valores.add(diferencia);
 				}
-					System.out.println("Tamaño valores: " + valores.size());
 				long suma = 0, media = 0;
-			//	int dato = 0;
 				for (int x =0;x<valores.size();x++) {
 					suma = suma + valores.get(x);
 				}
 				if (tiempos.size() != 0) {
 					media = suma / valores.size();
-
 					dato = (int) media;
 					data.add(dato);
 				} else {
-					System.out.printf("1 Estoy aqui");
 					data.add(0);
 				}
 			}
@@ -206,10 +176,8 @@ public class Graph_2 extends JPanel {
 				w++;
 				System.out.println(w + ". " + data.get(z));
 			}
-
 		}catch (IOException ex) {
 			ex.printStackTrace();
-
 		}
 		JFrame f = new JFrame();
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
