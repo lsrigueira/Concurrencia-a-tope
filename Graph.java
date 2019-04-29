@@ -9,7 +9,6 @@ import java.io.InputStreamReader;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Scanner;
-
 import javax.swing.*;
 
 public class Graph extends JPanel {
@@ -18,14 +17,17 @@ public class Graph extends JPanel {
 	private static Scanner teclado;
 	private static ArrayList<Integer> data = new ArrayList<Integer>();
 	private static ArrayList<Long> valores = new ArrayList<Long>();
-
+	public static int nodos = 0;
 
 	protected void paintComponent(Graphics g) {
 
 		int PAD = data.size();
 		super.paintComponent(g);
 		Graphics2D g2 = (Graphics2D)g;
+		Graphics2D g3 = (Graphics2D)g;
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+				RenderingHints.VALUE_ANTIALIAS_ON);
+		g3.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
 				RenderingHints.VALUE_ANTIALIAS_ON);
 		int w = getWidth();
 		int h = getHeight();
@@ -50,7 +52,7 @@ public class Graph extends JPanel {
 			sy += sh;
 		}
 
-		s = "NODOS";
+		s = "TIPO DE PROCESO - PARA ".concat(String.valueOf(nodos)).concat(" NODOS");
 		sy = h - PAD + (PAD - sh)/2 + lm.getAscent();
 		float sw = (float)font.getStringBounds(s, frc).getWidth();
 		float sx = (w - sw)/2;
@@ -59,33 +61,46 @@ public class Graph extends JPanel {
 
 		double xInc = (double)(w - 2*PAD-150)/(data.size()-1);
 		double scale = (double)(h - 2*PAD-150)/getMax(data);
-		g2.setPaint(Color.green.darker());
+		/*g2.setPaint(Color.green.darker());
 		for(int i = 0; i < data.size()-1; i++) {
 			double x1 = PAD+100 + i*xInc;
 			double y1 = h - PAD-100 - scale*data.get(i);
 			double x2 = PAD+100 + (i+1)*xInc;
 			double y2 = h - PAD-100 - scale*data.get(i+1);
 			g2.draw(new Line2D.Double(x1, y1, x2, y2));
-		}
+		}*/
 
-
-
-		g2.setPaint(Color.red);
 		for(int i = 0; i < data.size(); i++) {
+			if (i==0) {
+				g2.setPaint(Color.red);
+			} else if (i==1) {
+				g2.setPaint(Color.darkGray);
+			} else if (i==2) {
+				g2.setPaint(Color.green.darker());
+			} else if (i==3) {
+				g2.setPaint(Color.blue);
+			} else if (i==4) {
+				g2.setPaint(Color.magenta.darker());
+			}
+
 			double x = PAD+100 + i*xInc;
 			double y = h - PAD-100 - scale*data.get(i);
 			g2.fill(new Ellipse2D.Double(x-8, y-8, 16, 16));
 
-
-
-			String t = Integer.toString(i+1);
-			for(int p = 0; p < t.length(); p++) {
-				String letter = String.valueOf(t.charAt(p));
-				float tx = (float) (PAD+100 + i*xInc);
-				g2.drawString(letter, tx-3, 900);
-				g2.draw(new Line2D.Double(tx,850, tx, 880));
-
+			String[] t = new String[5];
+			t[0] = "ANULACIONS";
+			t[1] = "PAGOS";
+			t[2] = "PRE-RESERVAS";
+			t[3] = "GRADAS";
+			t[4] = "EVENTOS";
+			float tx = (float) (PAD+100 + i*xInc);
+			int gg = 33;
+			if (i==1 || i==3) {
+				gg = 22;
 			}
+			System.out.println(gg);
+			g2.drawString(t[i], tx-gg, 900);
+			g2.draw(new Line2D.Double(tx,850, tx, 880));
 
 
 			String f = Integer.toString(data.get(i));
@@ -130,21 +145,31 @@ public class Graph extends JPanel {
 
 		ArrayList <LocalTime> tiempos = new ArrayList<LocalTime>();
 		ArrayList <String> ficheros = new ArrayList<String>();
+		String[] procesos = new String[5];
+		procesos[0] = "anulacions.txt";
+		procesos[1] = "pagos.txt";
+		procesos[2] = "pre-reservas.txt";
+		procesos[3] = "gradas.txt";
+		procesos[4] = "eventos.txt";
 		String directory = System.getProperty("user.dir")+"/";
-		String nombre_fichero = null;
+		String nombre_fichero = "";
 		Integer g,j,k,eleccion = 0;
 		teclado = new Scanner(System.in);
 		InputStreamReader input = new InputStreamReader(System.in);
 		BufferedReader buffer = new BufferedReader(input);
-		System.out.println("\nIntroduzca el número de elementos a considerar:\n");
-		eleccion = obtenerOpcion();
+		eleccion = 5;
+		System.out.println("\nIntroduzca el número de nodos a considerar:\n");
+		nodos = obtenerOpcion();
+		System.out.println("\nNodos introducidos " + nodos);
+
 		for (j=0;j<eleccion;j++) {
-			System.out.println("\nIntroduzca el directorio del fichero log " + (j+1) + ":\n");
-			try {
-				nombre_fichero = buffer.readLine();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			//System.out.println("\nIntroduzca el directorio del fichero log " + (j+1) + ":\n");
+			//try {
+				nombre_fichero = "".concat(String.valueOf(nodos)).concat(procesos[j]);
+				System.out.println(nombre_fichero);
+			//} catch (IOException e) {
+			//	e.printStackTrace();
+			//}
 			ficheros.add(nombre_fichero);
 		}
 		try {
