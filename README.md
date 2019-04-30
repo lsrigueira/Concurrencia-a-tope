@@ -12,3 +12,4 @@ Cambios a realizar:
   -  git pull
   -  git add [files OR .] #Mensaje de actualización
   -  git commit -m "Mensaje"
+  -  git push
